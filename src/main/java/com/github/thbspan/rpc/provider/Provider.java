@@ -13,7 +13,7 @@ import java.util.Set;
 public class Provider {
     private Set<Registry> registrys = new LinkedHashSet<>();
     private Set<Protocol> protocols = new LinkedHashSet<>();
-    private static Map<String, Invoker> invokers = new HashMap<>();
+    public static Map<String, Invoker> invokers = new HashMap<>();
 
     public void export(Class<?> clazz, Object target) {
         // 1. 创建invoker
