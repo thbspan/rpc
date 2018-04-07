@@ -1,5 +1,7 @@
 package com.github.thbspan.rpc.protocol;
 
+import java.util.Objects;
+
 public class ProtocolPointEnd {
     private String ip;
     private int port;
@@ -23,5 +25,19 @@ public class ProtocolPointEnd {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProtocolPointEnd that = (ProtocolPointEnd) o;
+        return port == that.port &&
+                Objects.equals(ip, that.ip);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(ip, port);
     }
 }
