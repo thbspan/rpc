@@ -1,5 +1,7 @@
 package com.github.thbspan.rpc.transport.codec;
 
+import java.util.Arrays;
+
 public class CMessage {
     /** 头消息 **/
     private CHeader header;
@@ -33,5 +35,13 @@ public class CMessage {
 
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        return "CMessage{" +
+                "header=" + header +
+                ", data=" + Arrays.toString(data) +
+                '}';
     }
 }

@@ -1,12 +1,15 @@
 package com.github.thbspan.rpc.transport.codec;
 
+import com.github.thbspan.rpc.common.logger.Logger;
+import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
 public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
-    public static final int HEAD_LENGTH = 45;
+    Logger logger = LoggerFactory.getLogger(HeaderDecoder.class);
+    public static final int HEAD_LENGTH = 45;// 5 + 32 + 4 + 4
     public static final byte PACKAGE_TAG = 0X01;
 
     public HeaderDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength) {
@@ -15,7 +18,13 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        in.markReaderIndex();//保存readerIndex，调用resetReaderIndex()可以将marked的index回复为readerIndex
+        logger.info("ByteBuf in={}"+in);
+        if (in == null){
+            return null;
+        }
+        if (in.readableBytes() < HEAD_LENGTH){
+            throw new RuntimeException("msg size was too short");
+        }
         byte tag = in.readByte();// 读一个字节
         if (tag != PACKAGE_TAG) {//若第一个自己不是0X01开头，抛出异常。
             throw new CorruptedFrameException("非法协议包");
@@ -31,15 +40,23 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
         String sessionId = new String(sessionByte);//session
 
         int length = in.readInt();//header的leangth，指定body的长度
+        logger.info("length={}"+length);
         int commandId = in.readInt();//命令
 
         //创建header
         CHeader header = new CHeader(encode, encrypt, extend1, extend2, sessionId, length, commandId);
+        logger.info("header={}"+header);
         //创建message
         ByteBuf buf=in.readBytes(length);
+        if (buf.hasArray()){
+            logger.error("buf={}"+buf);
+            //添加到输出
+            return new CMessage(header, buf.array());
+        } else {
+            byte[] data = new byte[length];
+            buf.readBytes(data);
+            return new CMessage(header, data);
+        }
 
-        CMessage message = new CMessage(header, buf.array());
-        //添加到输出
-        return message;
     }
 }

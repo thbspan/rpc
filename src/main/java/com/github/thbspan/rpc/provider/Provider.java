@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Provider {
-    private Set<Registry> registrys = new LinkedHashSet<>();
+    private Set<Registry> registries = new LinkedHashSet<>();
     private Set<Protocol> protocols = new LinkedHashSet<>();
     public static Map<String, Invoker> invokers = new HashMap<>();
 
@@ -30,7 +30,7 @@ public class Provider {
             return;
         }
         // 1. 注册到注册中心
-        for (Registry registry : registrys) {
+        for (Registry registry : registries) {
             registry.registry(protocol, invoker);
         }
         // 2. 发布到协议中
@@ -38,13 +38,14 @@ public class Provider {
     }
 
     public void addRegistry(Registry registry) {
-        registrys.add(registry);
+        registries.add(registry);
     }
 
     public void addProtocol(Protocol protocol) {
         protocols.add(protocol);
     }
 
+    @SuppressWarnings("unchecked")
     private Invoker getInvoker(Class<?> clazz, Object target) {
         return new ProviderInvoker(clazz, target);
     }

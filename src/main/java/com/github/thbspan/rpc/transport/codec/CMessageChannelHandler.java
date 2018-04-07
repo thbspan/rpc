@@ -1,5 +1,7 @@
 package com.github.thbspan.rpc.transport.codec;
 
+import com.github.thbspan.rpc.common.logger.Logger;
+import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.common.serialize.Serializer;
 import com.github.thbspan.rpc.common.serialize.navtivejava.JdkSerializer;
 import com.github.thbspan.rpc.transport.Request;
@@ -8,11 +10,9 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 
-import java.nio.charset.Charset;
-
 public class CMessageChannelHandler extends ChannelDuplexHandler {
-    public static Charset DEFAULT_CHARSET = Charset.forName("utf8");
-    Serializer serializer = new JdkSerializer();
+    private static final Logger LOGGER = LoggerFactory.getLogger(CMessageChannelHandler.class);
+    private Serializer serializer = new JdkSerializer();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -48,8 +48,7 @@ public class CMessageChannelHandler extends ChannelDuplexHandler {
         CHeader header=new CHeader("12345678901234567890123456789012");//session 32bit
         header.setLength(data.length);
         header.setExtend1((byte)0);
-        CMessage message=new CMessage(header, data);
-        return message;
+        return new CMessage(header, data);
     }
 
     private CMessage getCMessage(Response response) {
@@ -57,7 +56,6 @@ public class CMessageChannelHandler extends ChannelDuplexHandler {
         CHeader header=new CHeader("12345678901234567890123456789012");//session 32bit
         header.setExtend1((byte)1);
         header.setLength(data.length);
-        CMessage message = new CMessage(header,data);
-        return message;
+        return new CMessage(header,data);
     }
 }

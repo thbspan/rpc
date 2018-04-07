@@ -1,17 +1,16 @@
 package com.github.thbspan.rpc.common.logger.log4j2;
 
 import com.github.thbspan.rpc.common.logger.Logger;
-import org.apache.log4j.Level;
 
 public class Log4j2Logger implements Logger{
-    private org.apache.log4j.Logger logger;
+    private org.apache.logging.log4j.Logger logger;
 
-    public Log4j2Logger(org.apache.log4j.Logger logger){
+    public Log4j2Logger(org.apache.logging.log4j.Logger logger){
         this.logger = logger;
     }
 
     public Log4j2Logger(Class<?> clazz){
-        this.logger = org.apache.log4j.Logger.getLogger(clazz);
+        this.logger = org.apache.logging.log4j.LogManager.getLogger(clazz);
     }
     @Override
     public void trace(String msg) {
@@ -100,11 +99,11 @@ public class Log4j2Logger implements Logger{
 
     @Override
     public boolean isWarnEnabled() {
-        return logger.isEnabledFor(Level.WARN);
+        return logger.isWarnEnabled();
     }
 
     @Override
     public boolean isErrorEnabled() {
-        return logger.isEnabledFor(Level.ERROR);
+        return logger.isErrorEnabled();
     }
 }

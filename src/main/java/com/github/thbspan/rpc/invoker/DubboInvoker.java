@@ -1,8 +1,11 @@
 package com.github.thbspan.rpc.invoker;
 
+import com.github.thbspan.rpc.common.logger.Logger;
+import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.transport.Client;
 
 public class DubboInvoker implements Invoker{
+    private static final Logger LOGGER = LoggerFactory.getLogger(DubboInvoker.class);
     private Client client;
     private String serviceName;
 
@@ -16,7 +19,7 @@ public class DubboInvoker implements Invoker{
         try {
             return Class.forName(serviceName);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
         return null;
     }

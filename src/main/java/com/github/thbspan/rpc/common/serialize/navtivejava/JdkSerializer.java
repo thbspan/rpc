@@ -6,12 +6,12 @@ import com.github.thbspan.rpc.common.serialize.Serializer;
 import com.github.thbspan.rpc.transport.Request;
 import com.github.thbspan.rpc.transport.Response;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
+import java.io.*;
 
 public class JdkSerializer implements Serializer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkSerializer.class);
+
     @Override
     public Request unSerializeRequest(byte[] bytes) {
         ByteArrayInputStream is = new ByteArrayInputStream(bytes);
@@ -40,11 +40,27 @@ public class JdkSerializer implements Serializer {
 
     @Override
     public byte[] serialize(Request request) {
-        return new byte[0];
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+
+            ObjectOutputStream oos = new ObjectOutputStream(out);
+            oos.writeObject(request);
+        } catch (IOException e) {
+            LOGGER.error(e);
+        }
+        return out.toByteArray();
     }
 
     @Override
     public byte[] serialize(Response response) {
-        return new byte[0];
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+
+            ObjectOutputStream oos = new ObjectOutputStream(out);
+            oos.writeObject(response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return out.toByteArray();
     }
 }

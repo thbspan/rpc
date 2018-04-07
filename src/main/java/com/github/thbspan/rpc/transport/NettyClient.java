@@ -28,7 +28,7 @@ public class NettyClient implements Client{
 
         Result result = new Result();
         try {
-            Response response = promise.get(120, TimeUnit.SECONDS);//默认1秒超时，response中的data是result
+            Response response = promise.get(60, TimeUnit.SECONDS);//默认1秒超时，response中的data是result
             return (Result) response.getData();
         } catch (Exception e) {
             result.setException(e);
