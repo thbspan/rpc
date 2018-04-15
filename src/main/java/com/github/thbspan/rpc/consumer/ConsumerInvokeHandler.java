@@ -15,7 +15,7 @@ public class ConsumerInvokeHandler implements InvocationHandler {
     }
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Result result = invoker.doInvoker(new Invocation(invoker.getInterfaceClass(),method.getName(), method.getParameterTypes(), args));
+        Result result = invoker.doInvoker(new Invocation(invoker.getInterfaceClass(), method.getName(), method.getParameterTypes(), args));
         return result.getValue();
     }
 }

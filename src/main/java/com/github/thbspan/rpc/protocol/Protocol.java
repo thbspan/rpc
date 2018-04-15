@@ -15,11 +15,11 @@ public abstract class Protocol extends ProtocolPointEnd{
         super(ip, port);
     }
 
-    public abstract void export(Invoker invoker);
+    public abstract void export(Invoker invoker, Object target);
 
     public abstract Invoker refer(String serviceName);
 
-    public abstract String getPortocolName();
+    public abstract String getProtocolName();
 
     public void setExport(String serviceName, Export export) {
         exports.put(serviceName, export);
@@ -30,8 +30,10 @@ public abstract class Protocol extends ProtocolPointEnd{
     }
 
     public String getServiceUrl(String serviceName) {
-        return String.format("%s://%s:%d/%s", getPortocolName(), getIp(), getPort(), serviceName);
+        return String.format("%s://%s:%d/%s", getProtocolName(), getIp(), getPort(), serviceName);
     }
+
+    public abstract String getPathProvider(String serviceName);
 
     public void setRefers(String serviceName, Invoker export) {
         refers.put(serviceName, export);

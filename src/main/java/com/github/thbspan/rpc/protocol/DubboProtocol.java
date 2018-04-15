@@ -2,7 +2,7 @@ package com.github.thbspan.rpc.protocol;
 
 import com.github.thbspan.rpc.invoker.DubboInvoker;
 import com.github.thbspan.rpc.invoker.Invoker;
-import com.github.thbspan.rpc.provider.DubboExpoter;
+import com.github.thbspan.rpc.provider.DubboExport;
 import com.github.thbspan.rpc.provider.Export;
 import com.github.thbspan.rpc.transport.Client;
 import com.github.thbspan.rpc.transport.NettyTransport;
@@ -20,13 +20,18 @@ public class DubboProtocol extends Protocol {
     }
 
     @Override
-    public String getPortocolName() {
+    public String getProtocolName() {
         return "dubbo";
     }
 
     @Override
-    public void export(Invoker invoker) {
-        Export export = new DubboExpoter(invoker);
+    public String getPathProvider(String serviceName) {
+        return "/dubbo/" + serviceName + "/providers";
+    }
+
+    @Override
+    public void export(Invoker invoker, Object target) {
+        Export export = new DubboExport(invoker);
         super.setExport(invoker.getInterfaceClass().getName(), export);
         openServer();
     }

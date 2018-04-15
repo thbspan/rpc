@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface Registry {
     void registry(Protocol protocol, Invoker invoker);
-    void subscribe(String serviceName,List<Invoker> invokers);
+    void subscribe(Protocol protocol, String serviceName,List<Invoker> invokers);
 }

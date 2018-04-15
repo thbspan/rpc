@@ -20,8 +20,7 @@ public class ProviderInvoker<T> implements Invoker<T> {
     public Result doInvoker(Invocation invocation) {
         Result result = new Result();
         try {
-            String name = invocation.getMethodName();
-            Method method = target.getClass().getMethod(name, invocation.getArgTypes());
+            Method method = invocation.getInterfaceClass().getMethod(invocation.getMethodName(), invocation.getParameterTypes());
             if (method != null) {
                 result.setValue(method.invoke(target, invocation.getArgs()));
             }

@@ -4,18 +4,18 @@ import java.io.Serializable;
 
 public class Invocation implements Serializable{
     private static final long serialVersionUID = -7850874120116176330L;
+
     private Class<?> interfaceClass;
     private String methodName;
-    private Class<?>[] argTypes;
+    private Class<?>[] parameterTypes;
     private Object[] args;
 
-    public Invocation(Class<?> interfaceClass, String methodName, Class<?>[] argTypes, Object[] args) {
+    public Invocation(Class<?> interfaceClass, String methodName, Class<?>[] parameterTypes, Object[] args) {
         this.interfaceClass = interfaceClass;
         this.methodName = methodName;
-        this.argTypes = argTypes;
+        this.parameterTypes = parameterTypes;
         this.args = args;
     }
-
     public static long getSerialVersionUID() {
         return serialVersionUID;
     }
@@ -36,12 +36,12 @@ public class Invocation implements Serializable{
         this.methodName = methodName;
     }
 
-    public Class<?>[] getArgTypes() {
-        return argTypes;
+    public Class<?>[] getParameterTypes() {
+        return parameterTypes;
     }
 
-    public void setArgTypes(Class<?>[] argTypes) {
-        this.argTypes = argTypes;
+    public void setParameterTypes(Class<?>[] parameterTypes) {
+        this.parameterTypes = parameterTypes;
     }
 
     public Object[] getArgs() {

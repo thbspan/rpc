@@ -20,11 +20,11 @@ public class Provider {
         Invoker invoker = invokers.computeIfAbsent(clazz.getName(), key -> getInvoker(clazz, target));
         // 2. 发布到协议
         for (Protocol protocol : protocols) {
-            export(protocol, invoker);
+            export(protocol, invoker, target);
         }
     }
 
-    private void export(Protocol protocol, Invoker invoker) {
+    private void export(Protocol protocol, Invoker invoker, Object target) {
         Export export = protocol.getExport(invoker.getInterfaceClass().getName());
         if (export != null) {
             return;
@@ -34,7 +34,7 @@ public class Provider {
             registry.registry(protocol, invoker);
         }
         // 2. 发布到协议中
-        protocol.export(invoker);
+        protocol.export(invoker, target);
     }
 
     public void addRegistry(Registry registry) {

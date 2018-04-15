@@ -2,6 +2,7 @@ package com.github.thbspan.rpc.consumer;
 
 import com.github.thbspan.rpc.invoker.AllInOneInvoker;
 import com.github.thbspan.rpc.invoker.Invoker;
+import com.github.thbspan.rpc.protocol.Protocol;
 import com.github.thbspan.rpc.registry.Registry;
 
 import java.lang.reflect.Proxy;
@@ -9,6 +10,7 @@ import java.util.*;
 
 public class Consumer {
     private Set<Registry> registrys = new LinkedHashSet<>();
+    private Protocol protocol;
     private Map<Class<?>,Object> refers = new HashMap<>();
 
     /**
@@ -19,7 +21,7 @@ public class Consumer {
             List<Invoker> invokers = new ArrayList<>();
             //1. 在注册中心查找
             for (Registry registry : registrys) {
-                registry.subscribe(clazz.getName(), invokers);
+                registry.subscribe(getProtocol(), clazz.getName(), invokers);
             }
             // 2. 合成一个invoker
             Invoker allInOne = new AllInOneInvoker(invokers);
@@ -30,5 +32,13 @@ public class Consumer {
 
     public void addRegistry(Registry registry) {
         registrys.add(registry);
+    }
+
+    public Protocol getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(Protocol protocol) {
+        this.protocol = protocol;
     }
 }

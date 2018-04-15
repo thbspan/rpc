@@ -5,6 +5,7 @@ import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.invoker.Invoker;
 import com.github.thbspan.rpc.protocol.DubboProtocol;
 import com.github.thbspan.rpc.protocol.Protocol;
+import com.github.thbspan.rpc.protocol.RmiProtocol;
 import com.github.thbspan.rpc.registry.Registry;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -46,43 +47,41 @@ public class ZookeeperRegistry implements Registry {
     @Override
     public void registry(Protocol protocol, Invoker invoker) {
         String serviceName = invoker.getInterfaceClass().getName();
+        String pathProvider = protocol.getPathProvider(serviceName);
         String url = protocol.getServiceUrl(serviceName);
         try {
-            client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getPath(url, serviceName));
+            client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getPath(url, pathProvider));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
 
-    private String getPath(String url, String serviceName) {
+    private String getPath(String url, String pathProvider) {
         try {
-            return getPathProvider(serviceName) + "/" + URLEncoder.encode(url, "UTF-8");
+            return pathProvider + "/" + URLEncoder.encode(url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             logger.error(e.getMessage(), e);
             return null;
         }
     }
 
-    private String getPathProvider(String serviceName) {
-        return "/dubbo/" + serviceName + "/providers";
-    }
-
     @Override
-    public void subscribe(String serviceName, List<Invoker> invokers) {
+    public void subscribe(Protocol protocol, String serviceName, List<Invoker> invokers) {
+        String pathProvider = protocol.getPathProvider(serviceName);
         try {
             Watcher watcher = event -> update(serviceName, invokers);
 
-            client.getChildren().usingWatcher(watcher).forPath(getPathProvider(serviceName));
+            client.getChildren().usingWatcher(watcher).forPath(pathProvider);
         } catch (Exception e) {
             logger.error(e);
         }
-        update(serviceName, invokers);
+        update(pathProvider, invokers);
     }
 
-    private void update(String serviceName, List<Invoker> invokers) {
+    private void update(String pathProvider, List<Invoker> invokers) {
         try {
             invokers.clear();
-            List<String> children = client.getChildren().forPath(getPathProvider(serviceName));
+            List<String> children = client.getChildren().forPath(pathProvider);
             for (String provider : children) {
                 Invoker invoker = getInvoker(provider);
                 if (invoker == null) {
@@ -98,10 +97,11 @@ public class ZookeeperRegistry implements Registry {
 
     private static final Pattern PATTERN_DUBBO_URL = Pattern.compile("dubbo://([\\w.]*+):(\\w+)/([\\w.]+)");
 
+    private static final Pattern PATTERN_RIM_URL = Pattern.compile("rmi://([\\w.]*+):(\\w+)/([\\w.]+)");
+
     private Invoker getInvoker(String provider) {
         try {
             // 1. 根据provider选择protocol，现在都是DubboProtocol
-            Invoker invoker;
             String url = URLDecoder.decode(provider, "UTF-8");
 
             Matcher m = PATTERN_DUBBO_URL.matcher(url);
@@ -109,13 +109,19 @@ public class ZookeeperRegistry implements Registry {
                 String protocolIp = m.group(1);
                 String protocolPort = m.group(2);
                 String serviceName = m.group(3);
-                Protocol protocol = new DubboProtocol(protocolIp, Integer.valueOf(protocolPort));
-                invoker = protocol.refer(serviceName);
-            } else {
-                logger.error("can not decode protocol");
-                return null;
+
+                return new DubboProtocol(protocolIp, Integer.valueOf(protocolPort)).refer(serviceName);
             }
-            return invoker;
+
+            m = PATTERN_RIM_URL.matcher(url);
+            if (m.find()) {
+                String protocolIp = m.group(1);
+                String protocolPort = m.group(2);
+                String serviceName = m.group(3);
+                return new RmiProtocol(protocolIp, Integer.valueOf(protocolPort)).refer(serviceName);
+            }
+            logger.error("can not decode protocol");
+            return null;
         } catch (UnsupportedEncodingException e) {
             logger.error(e.getMessage(), e);
             return null;

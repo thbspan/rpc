@@ -3,6 +3,7 @@ package com.github.thbspan.rpc.transport.codec;
 import com.github.thbspan.rpc.common.logger.Logger;
 import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -48,6 +49,7 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
         logger.info("header={}"+header);
         //创建message
         ByteBuf buf=in.readBytes(length);
+//        ByteBuf buf = Unpooled.buffer(in.readableBytes());
         if (buf.hasArray()){
             logger.error("buf={}"+buf);
             //添加到输出
