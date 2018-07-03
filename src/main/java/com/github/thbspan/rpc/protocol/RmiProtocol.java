@@ -85,7 +85,9 @@ public class RmiProtocol extends Protocol {
 
         String serviceUrl = getServiceUrl(serviceName);
         try {
-            return new RmiInvoker(Naming.lookup(serviceUrl), serviceName);
+            invoker = new RmiInvoker(Naming.lookup(serviceUrl), serviceName);
+            super.setRefers(serviceName, invoker);
+            return invoker;
         } catch (NotBoundException e) {
             throw new IllegalArgumentException("Service URL(" + serviceUrl + ") is invalid", e);
         } catch (MalformedURLException e) {

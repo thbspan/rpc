@@ -2,6 +2,7 @@ package com.github.thbspan.rpc;
 
 import com.github.thbspan.rpc.consumer.Consumer;
 import com.github.thbspan.rpc.protocol.DubboProtocol;
+import com.github.thbspan.rpc.protocol.HttpProtocol;
 import com.github.thbspan.rpc.protocol.Protocol;
 import com.github.thbspan.rpc.protocol.RmiProtocol;
 import com.github.thbspan.rpc.provider.Provider;
@@ -15,7 +16,7 @@ import java.rmi.RemoteException;
 public class ProviderTest {
 
     @Test
-    public void testDubbo(){
+    public void testDubbo() {
         Provider provider = new Provider();
 
         Registry registry = new ZookeeperRegistry("127.0.0.1", 2181);
@@ -55,4 +56,24 @@ public class ProviderTest {
         System.out.print(iRemote.echo());
     }
 
+    @Test
+    public void testHttp() {
+        Provider provider = new Provider();
+
+        Registry registry = new ZookeeperRegistry("127.0.0.1", 2181);
+        provider.addRegistry(registry);
+
+        Protocol protocol = new HttpProtocol("127.0.0.1", 9090);
+
+        provider.addProtocol(protocol);
+
+        provider.export(IEcho.class, new EchoImpl());
+
+        Consumer consumer = new Consumer();
+        consumer.addRegistry(registry);
+
+        consumer.setProtocol(protocol);
+        IEcho echo = (IEcho) consumer.refer(IEcho.class);
+        System.out.println(echo);
+    }
 }

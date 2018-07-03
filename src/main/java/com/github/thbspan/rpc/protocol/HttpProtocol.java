@@ -4,7 +4,11 @@ import com.github.thbspan.rpc.http.HttpBinder;
 import com.github.thbspan.rpc.http.HttpHandler;
 import com.github.thbspan.rpc.http.HttpInvokerServiceExporter;
 import com.github.thbspan.rpc.http.HttpServer;
+import com.github.thbspan.rpc.http.tomcat.TomcatHttpBinder;
+import com.github.thbspan.rpc.invoker.HttpInvoker;
 import com.github.thbspan.rpc.invoker.Invoker;
+import com.github.thbspan.rpc.provider.DubboExport;
+import com.github.thbspan.rpc.provider.Export;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -23,6 +27,8 @@ public class HttpProtocol extends Protocol {
 
     public HttpProtocol(String ip, int port) {
         super(ip, port);
+        // init httpBinder
+        httpBinder = new TomcatHttpBinder();
     }
 
     @Override
@@ -30,6 +36,8 @@ public class HttpProtocol extends Protocol {
         serverMap.computeIfAbsent(getIp() + ":" + getPort(),
                 serverKey -> httpBinder.bind(getIp(), getPort(), new InternalHandler()));
 
+        Export export = new DubboExport(invoker);
+        super.setExport(invoker.getInterfaceClass().getName(), export);
 
         final HttpInvokerServiceExporter httpInvokerServiceExporter = new HttpInvokerServiceExporter();
         httpInvokerServiceExporter.setServiceInterface(invoker.getInterfaceClass());
@@ -39,7 +47,7 @@ public class HttpProtocol extends Protocol {
         } catch (Exception e){
             throw new IllegalStateException(e);
         }
-//        serverMap.put()
+        skeletonMap.put(invoker.getInterfaceClass().getName(), httpInvokerServiceExporter);
     }
 
     @Override
@@ -49,7 +57,9 @@ public class HttpProtocol extends Protocol {
             return invoker;
         }
 
-        return null;
+        invoker = new HttpInvoker(getServiceUrl(serviceName), serviceName);
+        super.setRefers(serviceName, invoker);
+        return invoker;
     }
 
     @Override
