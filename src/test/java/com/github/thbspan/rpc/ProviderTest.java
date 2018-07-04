@@ -8,7 +8,12 @@ import com.github.thbspan.rpc.protocol.RmiProtocol;
 import com.github.thbspan.rpc.provider.Provider;
 import com.github.thbspan.rpc.registry.Registry;
 import com.github.thbspan.rpc.registry.zookeeper.ZookeeperRegistry;
-import com.github.thbspan.rpc.service.*;
+import com.github.thbspan.rpc.service.EchoImpl;
+import com.github.thbspan.rpc.service.IEcho;
+import com.github.thbspan.rpc.service.IRemote;
+import com.github.thbspan.rpc.service.IRemoteImpl;
+import com.github.thbspan.rpc.service.ISearchPrice;
+import com.github.thbspan.rpc.service.SearchPriceImpl;
 import org.junit.Test;
 
 import java.rmi.RemoteException;
@@ -74,6 +79,10 @@ public class ProviderTest {
 
         consumer.setProtocol(protocol);
         IEcho echo = (IEcho) consumer.refer(IEcho.class);
-        System.out.println(echo);
+        try {
+            System.out.println(echo.echo());
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

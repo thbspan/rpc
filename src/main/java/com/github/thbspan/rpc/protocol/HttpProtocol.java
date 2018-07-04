@@ -27,7 +27,7 @@ public class HttpProtocol extends Protocol {
 
     public HttpProtocol(String ip, int port) {
         super(ip, port);
-        // init httpBinder
+        // init httpBinder, 调用bind才会启动http服务
         httpBinder = new TomcatHttpBinder();
     }
 
@@ -81,7 +81,8 @@ public class HttpProtocol extends Protocol {
                 throws IOException, ServletException {
             String uri = request.getRequestURI();
 
-            HttpInvokerServiceExporter skeleton = skeletonMap.get(uri);
+            // 去掉/com.github.thbspan.rpc.service.IEcho 前面的斜线
+            HttpInvokerServiceExporter skeleton = skeletonMap.get(uri.substring(1));
 
             if (!DEFAULT_METHOD.equalsIgnoreCase(request.getMethod())) {
                 response.setStatus(500);

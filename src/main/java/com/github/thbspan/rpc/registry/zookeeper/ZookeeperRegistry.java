@@ -4,6 +4,7 @@ import com.github.thbspan.rpc.common.logger.Logger;
 import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.invoker.Invoker;
 import com.github.thbspan.rpc.protocol.DubboProtocol;
+import com.github.thbspan.rpc.protocol.HttpProtocol;
 import com.github.thbspan.rpc.protocol.Protocol;
 import com.github.thbspan.rpc.protocol.RmiProtocol;
 import com.github.thbspan.rpc.registry.Registry;
@@ -99,6 +100,7 @@ public class ZookeeperRegistry implements Registry {
 
     private static final Pattern PATTERN_RIM_URL = Pattern.compile("rmi://([\\w.]*+):(\\w+)/([\\w.]+)");
 
+    private static final Pattern PATTERN_HTTP_URL = Pattern.compile("http://([\\w.]*+):(\\w+)/([\\w.]+)");
     private Invoker getInvoker(String provider) {
         try {
             // 1. 根据provider选择protocol，现在都是DubboProtocol
@@ -120,6 +122,14 @@ public class ZookeeperRegistry implements Registry {
                 String serviceName = m.group(3);
                 return new RmiProtocol(protocolIp, Integer.valueOf(protocolPort)).refer(serviceName);
             }
+
+            m = PATTERN_HTTP_URL.matcher(url);
+            if (m.find()){
+                String protocolIp = m.group(1);
+                String protocolPort = m.group(2);
+                String serviceName = m.group(3);
+                return new HttpProtocol(protocolIp, Integer.valueOf(protocolPort)).refer(serviceName);
+            }
             logger.error("can not decode protocol");
             return null;
         } catch (UnsupportedEncodingException e) {
@@ -131,8 +141,13 @@ public class ZookeeperRegistry implements Registry {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
         ZookeeperRegistry that = (ZookeeperRegistry) o;
         return port == that.port && Objects.equals(ip, that.ip);
     }
