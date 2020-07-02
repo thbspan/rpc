@@ -1,9 +1,10 @@
 package com.github.thbspan.rpc.transport.codec;
 
+import java.nio.charset.StandardCharsets;
+
 import com.github.thbspan.rpc.common.logger.Logger;
 import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -34,11 +35,11 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
         byte encrypt = in.readByte();//第一个字节
         byte extend1 = in.readByte();//第一个字节
         byte extend2 = in.readByte();//第一个字节
-        byte sessionByte[] = new byte[32];//session
+        byte[] sessionByte = new byte[32];//session
 
         in.readBytes(sessionByte);//读取到sessionByte
 
-        String sessionId = new String(sessionByte);//session
+        String sessionId = new String(sessionByte, StandardCharsets.UTF_8);//session
 
         int length = in.readInt();//header的leangth，指定body的长度
         logger.info("length={}"+length);
@@ -59,6 +60,5 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
             buf.readBytes(data);
             return new CMessage(header, data);
         }
-
     }
 }

@@ -1,7 +1,5 @@
 package com.github.thbspan.rpc.transport.codec;
 
-import com.github.thbspan.rpc.common.logger.Logger;
-import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.common.serialize.Serializer;
 import com.github.thbspan.rpc.common.serialize.navtivejava.JdkSerializer;
 import com.github.thbspan.rpc.transport.Request;
@@ -9,21 +7,26 @@ import com.github.thbspan.rpc.transport.Response;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.timeout.IdleStateEvent;
 
 public class CMessageChannelHandler extends ChannelDuplexHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CMessageChannelHandler.class);
-    private Serializer serializer = new JdkSerializer();
+    private final Serializer serializer = new JdkSerializer();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        CMessage  message = (CMessage) msg;
-        CHeader header = message.getHeader();
-        byte type = header.getExtend1();
-        if(type == 0) { // Request
-            super.channelRead(ctx, serializer.unSerializeRequest(message.getData()));
-        }else {// Response
-            super.channelRead(ctx, serializer.unSerializeResponse(message.getData()));
+        if (msg instanceof CMessage) {
+            CMessage  message = (CMessage) msg;
+            CHeader header = message.getHeader();
+            byte type = header.getExtend1();
+            if(type == 0) { // Request
+                super.channelRead(ctx, serializer.unSerializeRequest(message.getData()));
+            }else {// Response
+                super.channelRead(ctx, serializer.unSerializeResponse(message.getData()));
+            }
+        } else {
+            ctx.fireChannelRead(msg);
         }
+
     }
 
     @Override
@@ -43,8 +46,18 @@ public class CMessageChannelHandler extends ChannelDuplexHandler {
 
     }
 
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            // server side timeout
+            ctx.close();
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
+    }
+
     private CMessage getCMessage(Request request) {
-        byte data [] = serializer.serialize(request);
+        byte[] data = serializer.serialize(request);
         CHeader header=new CHeader("12345678901234567890123456789012");//session 32bit
         header.setLength(data.length);
         header.setExtend1((byte)0);
@@ -52,7 +65,7 @@ public class CMessageChannelHandler extends ChannelDuplexHandler {
     }
 
     private CMessage getCMessage(Response response) {
-        byte  data[] = serializer.serialize(response);
+        byte[] data = serializer.serialize(response);
         CHeader header=new CHeader("12345678901234567890123456789012");//session 32bit
         header.setExtend1((byte)1);
         header.setLength(data.length);

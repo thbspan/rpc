@@ -8,11 +8,11 @@ public class CMessage {
     /** 数据 **/
     private byte[] data;
 
-    public  CMessage(){
+    public CMessage(){
 
     }
 
-    public  CMessage(CHeader header){
+    public CMessage(CHeader header){
         this.header=header;
     }
 

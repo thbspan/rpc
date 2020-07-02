@@ -16,7 +16,7 @@ public class RmiInvoker implements Invoker {
     }
 
     @Override
-    public Class getInterfaceClass() {
+    public Class<?> getInterfaceClass() {
         try {
             return Class.forName(serviceName);
         } catch (ClassNotFoundException e) {
