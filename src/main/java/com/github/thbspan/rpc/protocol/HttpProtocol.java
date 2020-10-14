@@ -23,7 +23,7 @@ public class HttpProtocol extends Protocol {
 
     private final Map<String, HttpInvokerServiceExporter> skeletonMap = new ConcurrentHashMap<>();
 
-    private HttpBinder httpBinder;
+    private final HttpBinder httpBinder;
 
     public HttpProtocol(String ip, int port) {
         super(ip, port);

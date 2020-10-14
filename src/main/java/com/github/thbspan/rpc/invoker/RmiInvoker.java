@@ -7,8 +7,8 @@ import java.rmi.Remote;
 
 public class RmiInvoker implements Invoker {
     private static final Logger LOGGER = LoggerFactory.getLogger(RmiInvoker.class);
-    private Remote stub;
-    private String serviceName;
+    private final Remote stub;
+    private final String serviceName;
 
     public RmiInvoker(Remote stub, String serviceName) {
         this.stub = stub;

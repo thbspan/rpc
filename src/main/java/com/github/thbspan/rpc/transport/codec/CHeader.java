@@ -8,7 +8,11 @@ public class CHeader implements Serializable {
     private byte encode;
     /** 加密类型。0表示不加密 **/
     private byte encrypt;
-    /** 用于扩展协议。暂未定义任何值 **/
+    /**
+     * 消息类型：
+     * 0 Request 消息
+     * 1 Response 消息
+     */
     private byte extend1;
     /** 用于扩展协议。暂未定义任何值 **/
     private byte extend2;
