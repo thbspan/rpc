@@ -13,12 +13,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-
 public class TomcatHttpServer implements HttpServer {
 
-    private String ip;
-    private int port;
+    private final String ip;
+    private final int port;
     private final Tomcat tomcat;
+
     public TomcatHttpServer(String ip, int port, HttpHandler handler) {
         this.ip = ip;
         this.port = port;
@@ -34,7 +34,7 @@ public class TomcatHttpServer implements HttpServer {
         context.addLifecycleListener(new Tomcat.FixContextListener());
         tomcat.getHost().addChild(context);
 
-        tomcat.addServlet(contextPath, "httpServer",  new HttpServlet(){
+        tomcat.addServlet(contextPath, "httpServer", new HttpServlet() {
             @Override
             protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 handler.handle(req, resp);
@@ -45,8 +45,8 @@ public class TomcatHttpServer implements HttpServer {
         try {
             tomcat.start();
         } catch (LifecycleException e) {
-            throw new IllegalStateException("failed to start tomcat on ip="+ip + ", port=" +port
-                    + " cause:"+e.getMessage(), e);
+            throw new IllegalStateException("failed to start tomcat on ip=" + ip + ", port=" + port
+                    + " cause:" + e.getMessage(), e);
         }
     }
 
@@ -55,8 +55,8 @@ public class TomcatHttpServer implements HttpServer {
         try {
             tomcat.stop();
         } catch (LifecycleException e) {
-            throw new IllegalStateException("failed to start tomcat on ip="+ip + ", port=" +port
-                    + " cause:"+e.getMessage(), e);
+            throw new IllegalStateException("failed to start tomcat on ip=" + ip + ", port=" + port
+                    + " cause:" + e.getMessage(), e);
         }
     }
 }

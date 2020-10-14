@@ -6,6 +6,8 @@ import com.github.thbspan.rpc.protocol.Protocol;
 import java.util.List;
 
 public interface Registry {
+
     void registry(Protocol protocol, Invoker invoker);
+
     void subscribe(Protocol protocol, String serviceName,List<Invoker> invokers);
 }

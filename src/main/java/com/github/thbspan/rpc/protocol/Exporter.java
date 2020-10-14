@@ -2,9 +2,9 @@ package com.github.thbspan.rpc.protocol;
 
 import com.github.thbspan.rpc.invoker.Invoker;
 
-public interface Exporter<T> {
+public interface Exporter {
 
-    Invoker<T> getInvoker();
+    Invoker getInvoker();
 
     void unexport();
 }

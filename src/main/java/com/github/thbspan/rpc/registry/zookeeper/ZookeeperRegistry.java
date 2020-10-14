@@ -23,10 +23,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ZookeeperRegistry implements Registry {
-    private static Logger logger = LoggerFactory.getLogger(ZookeeperRegistry.class);
+    private static final Logger logger = LoggerFactory.getLogger(ZookeeperRegistry.class);
 
-    private String ip;
-    private int port;
+    private final String ip;
+    private final int port;
     private CuratorFramework client;
 
     public ZookeeperRegistry(String ip, int port) {
@@ -70,29 +70,32 @@ public class ZookeeperRegistry implements Registry {
     public void subscribe(Protocol protocol, String serviceName, List<Invoker> invokers) {
         String pathProvider = protocol.getPathProvider(serviceName);
         try {
-            Watcher watcher = event -> update(serviceName, invokers);
-
-            client.getChildren().usingWatcher(watcher).forPath(pathProvider);
+            Watcher watcher = event -> update(pathProvider, invokers);
+            List<String> children = client.getChildren().usingWatcher(watcher).forPath(pathProvider);
+            update(children, invokers);
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(e.getMessage(), e);
         }
-        update(pathProvider, invokers);
     }
 
     private void update(String pathProvider, List<Invoker> invokers) {
         try {
             invokers.clear();
             List<String> children = client.getChildren().forPath(pathProvider);
-            for (String provider : children) {
-                Invoker invoker = getInvoker(provider);
-                if (invoker == null) {
-                    logger.error("invoker is null!");
-                } else {
-                    invokers.add(invoker);
-                }
-            }
+            update(children, invokers);
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    private void update(List<String> children, List<Invoker> invokers) {
+        for (String provider : children) {
+            Invoker invoker = getInvoker(provider);
+            if (invoker == null) {
+                logger.error("invoker is null!");
+            } else {
+                invokers.add(invoker);
+            }
         }
     }
 
@@ -112,7 +115,7 @@ public class ZookeeperRegistry implements Registry {
                 String protocolPort = m.group(2);
                 String serviceName = m.group(3);
 
-                return new DubboProtocol(protocolIp, Integer.valueOf(protocolPort)).refer(serviceName);
+                return new DubboProtocol(protocolIp, Integer.parseInt(protocolPort)).refer(serviceName);
             }
 
             m = PATTERN_RIM_URL.matcher(url);
@@ -120,7 +123,7 @@ public class ZookeeperRegistry implements Registry {
                 String protocolIp = m.group(1);
                 String protocolPort = m.group(2);
                 String serviceName = m.group(3);
-                return new RmiProtocol(protocolIp, Integer.valueOf(protocolPort)).refer(serviceName);
+                return new RmiProtocol(protocolIp, Integer.parseInt(protocolPort)).refer(serviceName);
             }
 
             m = PATTERN_HTTP_URL.matcher(url);
@@ -128,7 +131,7 @@ public class ZookeeperRegistry implements Registry {
                 String protocolIp = m.group(1);
                 String protocolPort = m.group(2);
                 String serviceName = m.group(3);
-                return new HttpProtocol(protocolIp, Integer.valueOf(protocolPort)).refer(serviceName);
+                return new HttpProtocol(protocolIp, Integer.parseInt(protocolPort)).refer(serviceName);
             }
             logger.error("can not decode protocol");
             return null;

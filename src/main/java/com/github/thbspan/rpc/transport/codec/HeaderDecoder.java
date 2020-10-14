@@ -1,9 +1,10 @@
 package com.github.thbspan.rpc.transport.codec;
 
+import java.nio.charset.StandardCharsets;
+
 import com.github.thbspan.rpc.common.logger.Logger;
 import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -19,11 +20,11 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        logger.info("ByteBuf in={}"+in);
-        if (in == null){
+        logger.info("ByteBuf in={}" + in);
+        if (in == null) {
             return null;
         }
-        if (in.readableBytes() < HEAD_LENGTH){
+        if (in.readableBytes() < HEAD_LENGTH) {
             throw new RuntimeException("msg size was too short");
         }
         byte tag = in.readByte();// 读一个字节
@@ -34,24 +35,24 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
         byte encrypt = in.readByte();//第一个字节
         byte extend1 = in.readByte();//第一个字节
         byte extend2 = in.readByte();//第一个字节
-        byte sessionByte[] = new byte[32];//session
+        byte[] sessionByte = new byte[32];//session
 
         in.readBytes(sessionByte);//读取到sessionByte
 
-        String sessionId = new String(sessionByte);//session
+        String sessionId = new String(sessionByte, StandardCharsets.UTF_8);//session
 
         int length = in.readInt();//header的leangth，指定body的长度
-        logger.info("length={}"+length);
+        logger.info("length={}" + length);
         int commandId = in.readInt();//命令
 
         //创建header
         CHeader header = new CHeader(encode, encrypt, extend1, extend2, sessionId, length, commandId);
-        logger.info("header={}"+header);
+        logger.info("header={}" + header);
         //创建message
-        ByteBuf buf=in.readBytes(length);
+        ByteBuf buf = in.readBytes(length);
 //        ByteBuf buf = Unpooled.buffer(in.readableBytes());
-        if (buf.hasArray()){
-            logger.error("buf={}"+buf);
+        if (buf.hasArray()) {
+            logger.error("buf={}" + buf);
             //添加到输出
             return new CMessage(header, buf.array());
         } else {
@@ -59,6 +60,5 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
             buf.readBytes(data);
             return new CMessage(header, data);
         }
-
     }
 }

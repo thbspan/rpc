@@ -1,36 +1,39 @@
 package com.github.thbspan.rpc.transport;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.github.thbspan.rpc.invoker.Invocation;
 import com.github.thbspan.rpc.invoker.Invoker;
 import com.github.thbspan.rpc.provider.Provider;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.concurrent.DefaultThreadFactory;
 
-public class NettyServerHandler extends ChannelInboundHandlerAdapter {
-    private NioEventLoopGroup loop = new NioEventLoopGroup();
+public class NettyServerHandler extends SimpleChannelInboundHandler<Request> {
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4, new DefaultThreadFactory("worker", true));
+
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        final Request request = (Request) msg;
+    protected void channelRead0(ChannelHandlerContext ctx, Request request) throws Exception {
         Object data = request.getData();
         if (data instanceof Invocation){
             final Invocation invocation = (Invocation) data;
-            loop.submit(() -> {
-                Response reponse = new Response(request.getId());
+            executorService.submit(() -> {
+                Response response = new Response(request.getId());
                 String serviceName = invocation.getInterfaceClass().getName();
 
                 Invoker invoker = Provider.invokers.get(serviceName);
 
                 if (invoker == null) {
-                    reponse.setData(new RuntimeException("can not find invoker of " + serviceName));
+                    response.setData(new RuntimeException("can not find invoker of " + serviceName));
                 } else {
                     try {
-                        reponse.setData(invoker.doInvoker(invocation));
+                        response.setData(invoker.doInvoker(invocation));
                     } catch (Throwable e) {
-                        reponse.setData(e);
+                        response.setData(e);
                     }
                 }
-                ctx.writeAndFlush(reponse);
+                ctx.writeAndFlush(response);
             });
         }
     }

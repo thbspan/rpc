@@ -8,17 +8,21 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 public class ConsumerInvokeHandler implements InvocationHandler {
-    private Invoker<?> invoker;
+    private final Invoker invoker;
 
-    public ConsumerInvokeHandler(Invoker<?> invoker) {
+    public ConsumerInvokeHandler(Invoker invoker) {
         this.invoker = invoker;
     }
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Result result = invoker.doInvoker(new Invocation(invoker.getInterfaceClass(), method.getName(), method.getParameterTypes(), args));
-        if (result.getException() != null){
-            throw result.getException();
+        if (method.getDeclaringClass().equals(Object.class)) {
+            return method.invoke(invoker, args);
+        } else {
+            Result result = invoker.doInvoker(new Invocation(invoker.getInterfaceClass(), method.getName(), method.getParameterTypes(), args));
+            if (result.getException() != null){
+                throw new RuntimeException(result.getException());
+            }
+            return result.getValue();
         }
-        return result.getValue();
     }
 }

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Request implements Serializable{
     private static final long serialVersionUID = -8516812983027091043L;
-    private static AtomicInteger count = new AtomicInteger(0);
+    private static final AtomicInteger count = new AtomicInteger(0);
     private String id;
     private Object data;
 

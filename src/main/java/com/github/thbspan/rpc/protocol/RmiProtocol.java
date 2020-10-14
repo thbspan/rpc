@@ -8,7 +8,12 @@ import com.github.thbspan.rpc.provider.Export;
 import com.github.thbspan.rpc.provider.RmiExport;
 
 import java.net.MalformedURLException;
-import java.rmi.*;
+
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -18,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 public class RmiProtocol extends Protocol {
     private static final Logger LOGGER = LoggerFactory.getLogger(RmiProtocol.class);
 
-    private static ConcurrentMap<String, Registry> registries = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, Registry> registries = new ConcurrentHashMap<>();
 
     public RmiProtocol(String ip, int port) {
         super(ip, port);

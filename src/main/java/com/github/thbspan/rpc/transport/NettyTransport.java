@@ -13,20 +13,26 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class NettyTransport implements Transport {
     Logger logger = LoggerFactory.getLogger(NettyTransport.class);
 
+    private final int DEFAULT_HEARTBEAT = 60 * 1000;
     @Override
     public Server bind(String ip, int port) {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workGroup = new NioEventLoopGroup();
-
+        int idleTimeout = DEFAULT_HEARTBEAT * 3;
         try {
             //辅助启动类
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workGroup)
                     .channel(NioServerSocketChannel.class)//创建的channel为NioServerSocketChannel【nio-ServerSocketChannel】
+                    .option(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
+                    .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .childOption(ChannelOption.SO_KEEPALIVE, true) //配置accepted的channel
                     .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -35,6 +41,7 @@ public class NettyTransport implements Transport {
                             ch.pipeline().addLast(new LoggingHandler())
                                     .addLast("decode", new HeaderDecoder(1024 * 1024, 37, 4))
                                     .addLast("encode", new HeaderEncoder())
+                                    .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
                                     .addLast("cmessage", new CMessageChannelHandler())
                                     .addLast(new NettyServerHandler());
                         }
@@ -60,6 +67,7 @@ public class NettyTransport implements Transport {
             Bootstrap b = new Bootstrap();
             b.group(group)
                     .channel(NioSocketChannel.class)
+                    .option(ChannelOption.SO_KEEPALIVE, true)
                     .option(ChannelOption.TCP_NODELAY, true)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
@@ -67,12 +75,12 @@ public class NettyTransport implements Transport {
                             ch.pipeline().addLast("decode", new HeaderDecoder(1024 * 1024, 37, 4));
                             ch.pipeline().addLast("encode", new HeaderEncoder());
                             ch.pipeline().addLast("cmessage", new CMessageChannelHandler());
-                            ch.pipeline().addLast("netty", new NettyClientHandler());
+                            ch.pipeline().addLast(new NettyClientHandler());
                         }
 
                     });
             logger.info(String.format("connect to [%s:%d]", ip, port));
-            ChannelFuture f = b.connect(ip, port).sync();
+            ChannelFuture f = b.connect(ip, port).syncUninterruptibly();
 //			f.channel().closeFuture().sync();
             channel = f.channel();
         } catch (Exception e) {

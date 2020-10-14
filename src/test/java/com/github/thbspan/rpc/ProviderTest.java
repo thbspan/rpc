@@ -17,6 +17,7 @@ import com.github.thbspan.rpc.service.SearchPriceImpl;
 import org.junit.Test;
 
 import java.rmi.RemoteException;
+import java.util.Scanner;
 
 public class ProviderTest {
 
@@ -38,10 +39,23 @@ public class ProviderTest {
         ISearchPrice searcher = (ISearchPrice) consumer.refer(ISearchPrice.class);
         String rs = searcher.getPrice("Python First Head");
         System.out.println("rs is " + rs);
-        IEcho echo = null;
-//        IEcho echo = (IEcho) consumer.refer(IEcho.class);
+        IEcho echo = (IEcho) consumer.refer(IEcho.class);
         System.out.println(echo);
-//        System.out.println(echo.echo());
+        System.out.println(echo.echo());
+    }
+
+    public static void main(String[] args) {
+        Provider provider = new Provider();
+
+        Registry registry = new ZookeeperRegistry("127.0.0.1", 2181);
+        provider.addRegistry(registry);
+        Protocol protocol = new DubboProtocol("127.0.0.1", 3307);
+        provider.addProtocol(protocol);
+        provider.export(ISearchPrice.class, new SearchPriceImpl());
+
+        try (Scanner scanner = new Scanner(System.in)){
+            System.out.println(scanner.nextLine());
+        }
     }
 
     @Test

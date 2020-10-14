@@ -11,9 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class NettyClient implements Client{
-    private Channel channel;
+    private final Channel channel;
     static final Map<String, DefaultPromise<Response>> FUTURES = new ConcurrentHashMap<>();
-    private NioEventLoopGroup loop = new NioEventLoopGroup();
+    private final NioEventLoopGroup loop = new NioEventLoopGroup();
     public NettyClient(Channel channel){
         this.channel = channel;
     }

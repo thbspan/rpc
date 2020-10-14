@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class Provider {
-    private Set<Registry> registries = new LinkedHashSet<>();
-    private Set<Protocol> protocols = new LinkedHashSet<>();
+    private final Set<Registry> registries = new LinkedHashSet<>();
+    private final Set<Protocol> protocols = new LinkedHashSet<>();
     public static Map<String, Invoker> invokers = new HashMap<>();
 
     public void export(Class<?> clazz, Object target) {
@@ -45,7 +45,6 @@ public class Provider {
         protocols.add(protocol);
     }
 
-    @SuppressWarnings("unchecked")
     private Invoker getInvoker(Class<?> clazz, Object target) {
         return new ProviderInvoker(clazz, target);
     }
