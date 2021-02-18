@@ -11,6 +11,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<Response> {
         String id = response.getId();
 
         DefaultPromise<Response> promise = NettyClient.FUTURES.remove(id);
-        promise.setSuccess(response); // 收到请求
+        // 收到请求
+        promise.setSuccess(response);
     }
 }

@@ -1,5 +1,19 @@
 package com.github.thbspan.rpc.registry.zookeeper;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.Watcher;
+
 import com.github.thbspan.rpc.common.logger.Logger;
 import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.invoker.Invoker;
@@ -8,19 +22,6 @@ import com.github.thbspan.rpc.protocol.HttpProtocol;
 import com.github.thbspan.rpc.protocol.Protocol;
 import com.github.thbspan.rpc.protocol.RmiProtocol;
 import com.github.thbspan.rpc.registry.Registry;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.Watcher;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.List;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ZookeeperRegistry implements Registry {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperRegistry.class);
@@ -37,12 +38,17 @@ public class ZookeeperRegistry implements Registry {
 
     private void init() {
         CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
-                .connectString(ip + ":" + port)
+                .connectString(ip + ':' + port)
                 .retryPolicy(new ExponentialBackoffRetry(1000, 3))
                 .connectionTimeoutMs(5000);
 
         client = builder.build();
         client.start();
+        try {
+            client.blockUntilConnected();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException("init zookeeper exception", e);
+        }
     }
 
     @Override
@@ -104,6 +110,7 @@ public class ZookeeperRegistry implements Registry {
     private static final Pattern PATTERN_RIM_URL = Pattern.compile("rmi://([\\w.]*+):(\\w+)/([\\w.]+)");
 
     private static final Pattern PATTERN_HTTP_URL = Pattern.compile("http://([\\w.]*+):(\\w+)/([\\w.]+)");
+
     private Invoker getInvoker(String provider) {
         try {
             // 1. 根据provider选择protocol，现在都是DubboProtocol
@@ -127,7 +134,7 @@ public class ZookeeperRegistry implements Registry {
             }
 
             m = PATTERN_HTTP_URL.matcher(url);
-            if (m.find()){
+            if (m.find()) {
                 String protocolIp = m.group(1);
                 String protocolPort = m.group(2);
                 String serviceName = m.group(3);

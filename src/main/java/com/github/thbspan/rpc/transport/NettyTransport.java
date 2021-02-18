@@ -18,9 +18,9 @@ import io.netty.handler.timeout.IdleStateHandler;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class NettyTransport implements Transport {
-    Logger logger = LoggerFactory.getLogger(NettyTransport.class);
+    private static final Logger logger = LoggerFactory.getLogger(NettyTransport.class);
 
-    private final int DEFAULT_HEARTBEAT = 60 * 1000;
+    private static final int DEFAULT_HEARTBEAT = 60 * 1000;
     @Override
     public Server bind(String ip, int port) {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
