@@ -11,7 +11,7 @@ import com.github.thbspan.rpc.protocol.Protocol;
 import com.github.thbspan.rpc.registry.Registry;
 
 public class Provider {
-    public static final Map<String, Invoker> INVOKERS = new HashMap<>();
+    private static final Map<String, Invoker> INVOKERS = new HashMap<>();
     private final Set<Registry> registries = new LinkedHashSet<>();
     private final Set<Protocol> protocols = new LinkedHashSet<>();
 
@@ -22,6 +22,22 @@ public class Provider {
         for (Protocol protocol : protocols) {
             export(protocol, invoker, target);
         }
+    }
+
+    public static Invoker getInvoker(String serviceName) {
+        return INVOKERS.get(serviceName);
+    }
+
+    public void addRegistry(Registry registry) {
+        registries.add(registry);
+    }
+
+    public void addProtocol(Protocol protocol) {
+        protocols.add(protocol);
+    }
+
+    private Invoker getInvoker(Class<?> interfaceClass, Object target) {
+        return new ProviderInvoker(interfaceClass, target);
     }
 
     private void export(Protocol protocol, Invoker invoker, Object target) {
@@ -35,17 +51,5 @@ public class Provider {
         for (Registry registry : registries) {
             registry.registry(protocol, invoker);
         }
-    }
-
-    public void addRegistry(Registry registry) {
-        registries.add(registry);
-    }
-
-    public void addProtocol(Protocol protocol) {
-        protocols.add(protocol);
-    }
-
-    private Invoker getInvoker(Class<?> interfaceClass, Object target) {
-        return new ProviderInvoker(interfaceClass, target);
     }
 }

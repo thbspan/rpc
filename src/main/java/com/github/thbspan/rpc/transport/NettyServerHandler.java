@@ -22,7 +22,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Request> {
                 Response response = new Response(request.getId());
                 String serviceName = invocation.getInterfaceClass().getName();
 
-                Invoker invoker = Provider.INVOKERS.get(serviceName);
+                Invoker invoker = Provider.getInvoker(serviceName);
 
                 if (invoker == null) {
                     response.setData(new RuntimeException("can not find invoker of " + serviceName));

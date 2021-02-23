@@ -7,7 +7,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 public class HeaderEncoder extends MessageToByteEncoder<CMessage> {
     @Override
     protected void encode(ChannelHandlerContext ctx, CMessage msg, ByteBuf out) throws Exception {
-        CHeader header=msg.getHeader();
+        CHeader header = msg.getHeader();
 
         out.writeByte(HeaderDecoder.PACKAGE_TAG);
         out.writeByte(header.getEncode());

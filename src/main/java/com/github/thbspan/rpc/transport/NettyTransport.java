@@ -5,6 +5,7 @@ import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.transport.codec.CMessageChannelHandler;
 import com.github.thbspan.rpc.transport.codec.HeaderDecoder;
 import com.github.thbspan.rpc.transport.codec.HeaderEncoder;
+import com.github.thbspan.rpc.transport.heartbeat.ServerHeartbeatHandler;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -50,6 +51,7 @@ public class NettyTransport implements Transport {
                                     .addLast("decode", new HeaderDecoder(1024 * 1024, 37, 4))
                                     .addLast("encode", new HeaderEncoder())
                                     .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
+                                    .addLast("heartbeat", new ServerHeartbeatHandler())
                                     .addLast("cmessage", new CMessageChannelHandler())
                                     //处理IO事件的处理类，处理网络事件
                                     .addLast(new NettyServerHandler());

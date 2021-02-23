@@ -37,8 +37,8 @@ public class DubboProtocol extends Protocol {
     }
 
     private void openServer() {
-        String serverKey = getIp() + ':' + getPort();
-        SERVERS.computeIfAbsent(serverKey, __ -> new NettyTransport().bind(getIp(), getPort()));
+        SERVERS.computeIfAbsent(getIp() + ':' + getPort(),
+                __ -> new NettyTransport().bind(getIp(), getPort()));
     }
 
     @Override

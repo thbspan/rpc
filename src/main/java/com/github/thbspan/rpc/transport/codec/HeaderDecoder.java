@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import com.github.thbspan.rpc.common.logger.Logger;
 import com.github.thbspan.rpc.common.logger.LoggerFactory;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.CorruptedFrameException;
@@ -13,10 +14,10 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
     private final Logger logger = LoggerFactory.getLogger(HeaderDecoder.class);
     /**
      * 5 + 32 + 4 + 4
-     *   1个字节头部 + 4个字节其他信息
-     *   32个字节sessionId
-     *   4个字节长度字段
-     *   4个字节命令字段
+     * 1个字节头部 + 4个字节其他信息
+     * 32个字节sessionId
+     * 4个字节长度字段
+     * 4个字节命令字段
      */
     public static final int HEAD_LENGTH = 45;
     public static final byte PACKAGE_TAG = 0X01;
@@ -40,29 +41,35 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
             //若第一个自己不是0X01开头，抛出异常
             throw new CorruptedFrameException("非法协议包");
         }
-        byte encode = in.readByte();//第一个字节
-        byte encrypt = in.readByte();//第一个字节
-        byte extend1 = in.readByte();//第一个字节
-        byte extend2 = in.readByte();//第一个字节
-        byte[] sessionByte = new byte[32];//session
+        // 下一个字节
+        byte encode = in.readByte();
+        // 下一个字节
+        byte encrypt = in.readByte();
+        // 下一个字节
+        byte extend1 = in.readByte();
+        // 下一个字节
+        byte extend2 = in.readByte();
+        // session信息
+        byte[] sessionByte = new byte[32];
+        // 读取到sessionByte
+        in.readBytes(sessionByte);
+        //session
+        String sessionId = new String(sessionByte, StandardCharsets.UTF_8);
+        //header中的length字段，指定body的长度
+        int length = in.readInt();
+        logger.info("length=" + length);
+        // 命令
+        int commandId = in.readInt();
 
-        in.readBytes(sessionByte);//读取到sessionByte
-
-        String sessionId = new String(sessionByte, StandardCharsets.UTF_8);//session
-
-        int length = in.readInt();//header的length，指定body的长度
-        logger.info("length={}" + length);
-        int commandId = in.readInt();//命令
-
-        //创建header
+        // 创建header
         CHeader header = new CHeader(encode, encrypt, extend1, extend2, sessionId, length, commandId);
         logger.info("header={}" + header);
-        //创建message
+        // 创建message
         ByteBuf buf = in.readSlice(length);
         // ByteBuf buf = Unpooled.buffer(in.readableBytes());
         if (buf.hasArray()) {
             logger.error("buf={}" + buf);
-            //添加到输出
+            // 添加到输出
             return new CMessage(header, buf.array());
         } else {
             byte[] data = new byte[length];
