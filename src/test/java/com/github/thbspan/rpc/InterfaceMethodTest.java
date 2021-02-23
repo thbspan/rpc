@@ -2,7 +2,7 @@ package com.github.thbspan.rpc;
 
 import java.lang.reflect.Method;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.thbspan.rpc.service.EchoImpl;
 import com.github.thbspan.rpc.service.SubIEcho;

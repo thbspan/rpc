@@ -1,23 +1,23 @@
 package com.github.thbspan.rpc.provider;
 
-import com.github.thbspan.rpc.invoker.Invoker;
-import com.github.thbspan.rpc.invoker.ProviderInvoker;
-import com.github.thbspan.rpc.protocol.Protocol;
-import com.github.thbspan.rpc.registry.Registry;
-
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.thbspan.rpc.invoker.Invoker;
+import com.github.thbspan.rpc.invoker.ProviderInvoker;
+import com.github.thbspan.rpc.protocol.Protocol;
+import com.github.thbspan.rpc.registry.Registry;
+
 public class Provider {
+    public static final Map<String, Invoker> INVOKERS = new HashMap<>();
     private final Set<Registry> registries = new LinkedHashSet<>();
     private final Set<Protocol> protocols = new LinkedHashSet<>();
-    public static Map<String, Invoker> invokers = new HashMap<>();
 
-    public void export(Class<?> clazz, Object target) {
+    public void export(Class<?> interfaceClass, Object target) {
         // 1. 创建invoker
-        Invoker invoker = invokers.computeIfAbsent(clazz.getName(), key -> getInvoker(clazz, target));
+        Invoker invoker = INVOKERS.computeIfAbsent(interfaceClass.getName(), __ -> getInvoker(interfaceClass, target));
         // 2. 发布到协议
         for (Protocol protocol : protocols) {
             export(protocol, invoker, target);
@@ -29,12 +29,12 @@ public class Provider {
         if (export != null) {
             return;
         }
-        // 1. 注册到注册中心
+        // 1. 发布到协议中
+        protocol.export(invoker, target);
+        // 2. 注册到注册中心
         for (Registry registry : registries) {
             registry.registry(protocol, invoker);
         }
-        // 2. 发布到协议中
-        protocol.export(invoker, target);
     }
 
     public void addRegistry(Registry registry) {
@@ -45,7 +45,7 @@ public class Provider {
         protocols.add(protocol);
     }
 
-    private Invoker getInvoker(Class<?> clazz, Object target) {
-        return new ProviderInvoker(clazz, target);
+    private Invoker getInvoker(Class<?> interfaceClass, Object target) {
+        return new ProviderInvoker(interfaceClass, target);
     }
 }

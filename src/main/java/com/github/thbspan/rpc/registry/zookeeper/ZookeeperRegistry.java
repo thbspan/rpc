@@ -59,7 +59,7 @@ public class ZookeeperRegistry implements Registry {
         try {
             client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(getPath(url, pathProvider));
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.error("registry protocol exception", e);
         }
     }
 

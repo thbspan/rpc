@@ -1,5 +1,10 @@
 package com.github.thbspan.rpc;
 
+import java.rmi.RemoteException;
+import java.util.Scanner;
+
+import org.junit.jupiter.api.Test;
+
 import com.github.thbspan.rpc.consumer.Consumer;
 import com.github.thbspan.rpc.protocol.DubboProtocol;
 import com.github.thbspan.rpc.protocol.HttpProtocol;
@@ -14,10 +19,6 @@ import com.github.thbspan.rpc.service.IRemote;
 import com.github.thbspan.rpc.service.IRemoteImpl;
 import com.github.thbspan.rpc.service.ISearchPrice;
 import com.github.thbspan.rpc.service.SearchPriceImpl;
-import org.junit.Test;
-
-import java.rmi.RemoteException;
-import java.util.Scanner;
 
 public class ProviderTest {
 
@@ -53,7 +54,7 @@ public class ProviderTest {
         provider.addProtocol(protocol);
         provider.export(ISearchPrice.class, new SearchPriceImpl());
 
-        try (Scanner scanner = new Scanner(System.in)){
+        try (Scanner scanner = new Scanner(System.in)) {
             System.out.println(scanner.nextLine());
         }
     }
@@ -93,10 +94,6 @@ public class ProviderTest {
 
         consumer.setProtocol(protocol);
         IEcho echo = (IEcho) consumer.refer(IEcho.class);
-        try {
-            System.out.println(echo.echo());
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+        System.out.println(echo.echo());
     }
 }

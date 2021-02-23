@@ -10,8 +10,15 @@ import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
 public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
-    Logger logger = LoggerFactory.getLogger(HeaderDecoder.class);
-    public static final int HEAD_LENGTH = 45;// 5 + 32 + 4 + 4
+    private final Logger logger = LoggerFactory.getLogger(HeaderDecoder.class);
+    /**
+     * 5 + 32 + 4 + 4
+     *   1个字节头部 + 4个字节其他信息
+     *   32个字节sessionId
+     *   4个字节长度字段
+     *   4个字节命令字段
+     */
+    public static final int HEAD_LENGTH = 45;
     public static final byte PACKAGE_TAG = 0X01;
 
     public HeaderDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength) {
@@ -27,8 +34,10 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
         if (in.readableBytes() < HEAD_LENGTH) {
             throw new RuntimeException("msg size was too short");
         }
-        byte tag = in.readByte();// 读一个字节
-        if (tag != PACKAGE_TAG) {//若第一个自己不是0X01开头，抛出异常。
+        // 读一个字节
+        byte tag = in.readByte();
+        if (tag != PACKAGE_TAG) {
+            //若第一个自己不是0X01开头，抛出异常
             throw new CorruptedFrameException("非法协议包");
         }
         byte encode = in.readByte();//第一个字节
@@ -41,7 +50,7 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
 
         String sessionId = new String(sessionByte, StandardCharsets.UTF_8);//session
 
-        int length = in.readInt();//header的leangth，指定body的长度
+        int length = in.readInt();//header的length，指定body的长度
         logger.info("length={}" + length);
         int commandId = in.readInt();//命令
 
@@ -49,8 +58,8 @@ public class HeaderDecoder extends LengthFieldBasedFrameDecoder {
         CHeader header = new CHeader(encode, encrypt, extend1, extend2, sessionId, length, commandId);
         logger.info("header={}" + header);
         //创建message
-        ByteBuf buf = in.readBytes(length);
-//        ByteBuf buf = Unpooled.buffer(in.readableBytes());
+        ByteBuf buf = in.readSlice(length);
+        // ByteBuf buf = Unpooled.buffer(in.readableBytes());
         if (buf.hasArray()) {
             logger.error("buf={}" + buf);
             //添加到输出

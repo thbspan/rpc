@@ -6,8 +6,8 @@ public class ProviderInvoker implements Invoker {
     private final Object target;
     private final Class<?> interfaceClass;
 
-    public ProviderInvoker(Class<?> clazz, Object target) {
-        this.interfaceClass = clazz;
+    public ProviderInvoker(Class<?> interfaceClass, Object target) {
+        this.interfaceClass = interfaceClass;
         this.target = target;
     }
 

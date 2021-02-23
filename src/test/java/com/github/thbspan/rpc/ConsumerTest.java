@@ -1,12 +1,13 @@
 package com.github.thbspan.rpc;
 
+import org.junit.jupiter.api.Test;
+
 import com.github.thbspan.rpc.consumer.Consumer;
 import com.github.thbspan.rpc.protocol.DubboProtocol;
 import com.github.thbspan.rpc.protocol.Protocol;
 import com.github.thbspan.rpc.registry.Registry;
 import com.github.thbspan.rpc.registry.zookeeper.ZookeeperRegistry;
 import com.github.thbspan.rpc.service.ISearchPrice;
-import org.junit.Test;
 
 public class ConsumerTest {
 

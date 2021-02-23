@@ -1,5 +1,8 @@
 package com.github.thbspan.rpc.protocol;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import com.github.thbspan.rpc.invoker.DubboInvoker;
 import com.github.thbspan.rpc.invoker.Invoker;
 import com.github.thbspan.rpc.provider.DubboExport;
@@ -8,12 +11,9 @@ import com.github.thbspan.rpc.transport.Client;
 import com.github.thbspan.rpc.transport.NettyTransport;
 import com.github.thbspan.rpc.transport.Server;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 public class DubboProtocol extends Protocol {
-    private static ConcurrentMap<String, Server> servers = new ConcurrentHashMap<>();
-    private static ConcurrentMap<String, Client> clients = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, Server> SERVERS = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, Client> CLIENTS = new ConcurrentHashMap<>();
 
     public DubboProtocol(String ip, int port) {
         super(ip, port);
@@ -37,10 +37,8 @@ public class DubboProtocol extends Protocol {
     }
 
     private void openServer() {
-        String serverKey = getIp() + ":" + getPort();
-
-        servers.computeIfAbsent(serverKey,
-                key -> new NettyTransport().bind(getIp(), getPort()));
+        String serverKey = getIp() + ':' + getPort();
+        SERVERS.computeIfAbsent(serverKey, __ -> new NettyTransport().bind(getIp(), getPort()));
     }
 
     @Override
@@ -56,7 +54,6 @@ public class DubboProtocol extends Protocol {
     }
 
     private Client openClient() {
-        return clients.computeIfAbsent(getIp() + getPort(),
-                key -> new NettyTransport().connect(getIp(), getPort()));
+        return CLIENTS.computeIfAbsent(getIp() + getPort(), __ -> new NettyTransport().connect(getIp(), getPort()));
     }
 }

@@ -8,8 +8,8 @@ import java.util.concurrent.ConcurrentMap;
 
 public abstract class Protocol extends ProtocolPointEnd{
 
-    private ConcurrentMap<String, Export> exports = new ConcurrentHashMap<>();
-    private ConcurrentMap<String, Invoker> refers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Export> exports = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Invoker> refers = new ConcurrentHashMap<>();
 
     public Protocol(String ip, int port) {
         super(ip, port);

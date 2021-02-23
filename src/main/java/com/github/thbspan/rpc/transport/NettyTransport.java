@@ -5,9 +5,14 @@ import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.transport.codec.CMessageChannelHandler;
 import com.github.thbspan.rpc.transport.codec.HeaderDecoder;
 import com.github.thbspan.rpc.transport.codec.HeaderEncoder;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -21,6 +26,7 @@ public class NettyTransport implements Transport {
     private static final Logger logger = LoggerFactory.getLogger(NettyTransport.class);
 
     private static final int DEFAULT_HEARTBEAT = 60 * 1000;
+
     @Override
     public Server bind(String ip, int port) {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -30,11 +36,13 @@ public class NettyTransport implements Transport {
             //辅助启动类
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workGroup)
-                    .channel(NioServerSocketChannel.class)//创建的channel为NioServerSocketChannel【nio-ServerSocketChannel】
+                    // 创建的channel为NioServerSocketChannel【nio-ServerSocketChannel】
+                    .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
                     .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
                     .option(ChannelOption.SO_BACKLOG, 1024)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true) //配置accepted的channel
+                    // 配置accepted的channel
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
@@ -43,18 +51,17 @@ public class NettyTransport implements Transport {
                                     .addLast("encode", new HeaderEncoder())
                                     .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
                                     .addLast("cmessage", new CMessageChannelHandler())
+                                    //处理IO事件的处理类，处理网络事件
                                     .addLast(new NettyServerHandler());
                         }
-                    });//处理IO事件的处理类，处理网络事件
-            @SuppressWarnings("unused")
-            ChannelFuture f = b.bind(ip, port).sync();//绑定端口后同步等待
+                    });
+            // 绑定端口后同步等待
+            b.bind(ip, port).sync();
             logger.info(String.format("bind to [%s:%d]", ip, port));
-//            f.channel().closeFuture().sync();//阻塞
         } catch (Exception e) {
-            logger.error(e);
-        } finally {
-//			bossGroup.shutdownGracefully();
-//			workGroup.shutdownGracefully();
+            logger.error("init server exception", e);
+            bossGroup.shutdownGracefully();
+            workGroup.shutdownGracefully();
         }
         return new NettyServer(bossGroup, workGroup);
     }
@@ -81,13 +88,11 @@ public class NettyTransport implements Transport {
                     });
             logger.info(String.format("connect to [%s:%d]", ip, port));
             ChannelFuture f = b.connect(ip, port).syncUninterruptibly();
-//			f.channel().closeFuture().sync();
             channel = f.channel();
         } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-//			group.shutdownGracefully();
+            logger.error("init client exception", e);
+            group.shutdownGracefully();
         }
-        return new NettyClient(channel);
+        return new NettyClient(channel, group);
     }
 }
