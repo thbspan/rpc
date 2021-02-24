@@ -5,6 +5,7 @@ import com.github.thbspan.rpc.common.logger.LoggerFactory;
 import com.github.thbspan.rpc.transport.codec.CMessageChannelHandler;
 import com.github.thbspan.rpc.transport.codec.HeaderDecoder;
 import com.github.thbspan.rpc.transport.codec.HeaderEncoder;
+import com.github.thbspan.rpc.transport.heartbeat.ClientHeartbeatHandler;
 import com.github.thbspan.rpc.transport.heartbeat.ServerHeartbeatHandler;
 
 import io.netty.bootstrap.Bootstrap;
@@ -13,6 +14,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -32,11 +34,11 @@ public class NettyTransport implements Transport {
     public Server bind(String ip, int port) {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workGroup = new NioEventLoopGroup();
-        int idleTimeout = DEFAULT_HEARTBEAT * 3;
         try {
             //辅助启动类
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(bossGroup, workGroup)
+            ServerBootstrap bootstrap = new ServerBootstrap();
+            int idleTimeout = DEFAULT_HEARTBEAT * 3;
+            bootstrap.group(bossGroup, workGroup)
                     // 创建的channel为NioServerSocketChannel【nio-ServerSocketChannel】
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
@@ -58,7 +60,7 @@ public class NettyTransport implements Transport {
                         }
                     });
             // 绑定端口后同步等待
-            b.bind(ip, port).sync();
+            bootstrap.bind(ip, port).sync();
             logger.info(String.format("bind to [%s:%d]", ip, port));
         } catch (Exception e) {
             logger.error("init server exception", e);
@@ -73,23 +75,26 @@ public class NettyTransport implements Transport {
         EventLoopGroup group = new NioEventLoopGroup();
         Channel channel = null;
         try {
-            Bootstrap b = new Bootstrap();
-            b.group(group)
+            Bootstrap bootstrap = new Bootstrap();
+            int idleTimeout = DEFAULT_HEARTBEAT;
+            bootstrap.group(group)
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.SO_KEEPALIVE, true)
                     .option(ChannelOption.TCP_NODELAY, true)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast("decode", new HeaderDecoder(1024 * 1024, 37, 4));
-                            ch.pipeline().addLast("encode", new HeaderEncoder());
-                            ch.pipeline().addLast("cmessage", new CMessageChannelHandler());
-                            ch.pipeline().addLast(new NettyClientHandler());
+                            ChannelPipeline pipeline = ch.pipeline();
+                            pipeline.addLast("decode", new HeaderDecoder(1024 * 1024, 37, 4));
+                            pipeline.addLast("encode", new HeaderEncoder());
+                            pipeline.addLast("client-idle-handler", new IdleStateHandler(idleTimeout, idleTimeout, 0, MILLISECONDS));
+                            pipeline.addLast("heartbeat", new ClientHeartbeatHandler());
+                            pipeline.addLast("cmessage", new CMessageChannelHandler());
+                            pipeline.addLast(new NettyClientHandler());
                         }
-
                     });
             logger.info(String.format("connect to [%s:%d]", ip, port));
-            ChannelFuture f = b.connect(ip, port).syncUninterruptibly();
+            ChannelFuture f = bootstrap.connect(ip, port).syncUninterruptibly();
             channel = f.channel();
         } catch (Exception e) {
             logger.error("init client exception", e);
