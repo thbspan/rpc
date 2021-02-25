@@ -1,9 +1,13 @@
 package com.github.thbspan.rpc.transport.codec;
 
+import java.util.UUID;
+
 import com.github.thbspan.rpc.common.serialize.Serializer;
 import com.github.thbspan.rpc.common.serialize.navtivejava.JdkSerializer;
+import com.github.thbspan.rpc.common.utils.StringUtils;
 import com.github.thbspan.rpc.transport.Request;
 import com.github.thbspan.rpc.transport.Response;
+import com.github.thbspan.rpc.transport.heartbeat.HeartbeatMessageHandler;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,15 +22,19 @@ public class CMessageChannelHandler extends ChannelDuplexHandler {
             CMessage message = (CMessage) msg;
             CHeader header = message.getHeader();
             byte type = header.getExtend1();
-            if (type == 0) { // Request
+            if (type == 0) {
+                // Request
                 super.channelRead(ctx, serializer.unSerializeRequest(message.getData()));
-            } else {// Response
+            } else if (type == 1) {
+                // Response
                 super.channelRead(ctx, serializer.unSerializeResponse(message.getData()));
+            } else if (type == 9) {
+                // heart beat
+                ctx.channel().write(HeartbeatMessageHandler.createHeartbeatMessage());
             }
         } else {
             ctx.fireChannelRead(msg);
         }
-
     }
 
     @Override
@@ -45,7 +53,8 @@ public class CMessageChannelHandler extends ChannelDuplexHandler {
 
     private CMessage getCMessage(Request request) {
         byte[] data = serializer.serialize(request);
-        CHeader header = new CHeader("12345678901234567890123456789012");//session 32bit
+        //session 32bit
+        CHeader header = new CHeader(StringUtils.remove(UUID.randomUUID().toString(), '-'));
         header.setLength(data.length);
         header.setExtend1((byte) 0);
         return new CMessage(header, data);
@@ -53,7 +62,8 @@ public class CMessageChannelHandler extends ChannelDuplexHandler {
 
     private CMessage getCMessage(Response response) {
         byte[] data = serializer.serialize(response);
-        CHeader header = new CHeader("12345678901234567890123456789012");//session 32bit
+        //session 32bit
+        CHeader header = new CHeader(StringUtils.remove(UUID.randomUUID().toString(), '-'));
         header.setExtend1((byte) 1);
         header.setLength(data.length);
         return new CMessage(header, data);

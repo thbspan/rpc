@@ -33,7 +33,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Request> {
                         response.setData(e);
                     }
                 }
-                ctx.writeAndFlush(response);
+                ctx.channel().writeAndFlush(response);
             });
         }
     }

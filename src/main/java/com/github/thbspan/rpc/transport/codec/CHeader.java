@@ -12,6 +12,7 @@ public class CHeader implements Serializable {
      * 消息类型：
      * 0 Request 消息
      * 1 Response 消息
+     * 9 HeartBeat 消息
      */
     private byte extend1;
     /** 用于扩展协议。暂未定义任何值 **/

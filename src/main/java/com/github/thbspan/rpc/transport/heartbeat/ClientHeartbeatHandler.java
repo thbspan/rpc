@@ -12,7 +12,7 @@ public class ClientHeartbeatHandler extends ChannelDuplexHandler {
             super.userEventTriggered(ctx, evt);
             return;
         }
-
-        super.userEventTriggered(ctx, evt);
+        // send heartbeat message
+        ctx.channel().writeAndFlush(HeartbeatMessageHandler.createHeartbeatMessage());
     }
 }
